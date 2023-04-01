@@ -8,13 +8,16 @@ app = FastAPI()
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.include_router(apis, prefix="/api")
 
+
 @app.on_event("startup")
 async def startup():
     await prisma.connect()
 
+
 @app.on_event("shutdown")
 async def shutdown():
     await prisma.disconnect()
+
 
 @app.get("/")
 def read_root():
