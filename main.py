@@ -1,17 +1,21 @@
-import uvicorn
+from src.apis import apis
+from src.prisma import prisma
+
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi import FastAPI
-import os
 
-# load environment variables
-port = os.environ["PORT"]
-
-# initialize FastAPI
 app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.include_router(apis, prefix="/api")
+
+@app.on_event("startup")
+async def startup():
+    await prisma.connect()
+
+@app.on_event("shutdown")
+async def shutdown():
+    await prisma.disconnect()
 
 @app.get("/")
-def index():
-    return {"data": "Application ran successfully - FastAPI"}
-  
-  
-if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+def read_root():
+    return {"version": "1.0.0"}
